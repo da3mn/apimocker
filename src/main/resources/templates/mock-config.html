@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>API Mock Configurator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+  <h1 class="text-center">Mock API Configurator</h1>
+
+  <!-- Form for Adding New API -->
+  <div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+      Add New Mock API
+    </div>
+    <div class="card-body">
+      <form id="apiForm" th:action="@{/mock-config/add}" method="post">
+        <div class="mb-3">
+          <label for="endpoint" class="form-label">API Endpoint</label>
+          <input type="text" id="endpoint" name="endpoint" class="form-control" placeholder="/api/example" required>
+        </div>
+        <div class="mb-3">
+          <label for="requestType" class="form-label">Request Type</label>
+          <select id="requestType" name="requestType" class="form-select" required>
+            <option value="JSON">JSON</option>
+            <option value="XML">XML</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="requestBody" class="form-label">Request Body (Example)</label>
+          <textarea id="requestBody" name="requestBody" class="form-control" rows="3" placeholder='{"key": "value"}' required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="responseType" class="form-label">Response Type</label>
+          <select id="responseType" name="responseType" class="form-select" required>
+            <option value="JSON">JSON</option>
+            <option value="XML">XML</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="responseBody" class="form-label">Response Body (Example)</label>
+          <textarea id="responseBody" name="responseBody" class="form-control" rows="3" placeholder='{"response": "value"}' required></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="originalServerUrl" class="form-label">Original Server URL (Optional)</label>
+          <input type="url" id="originalServerUrl" name="originalServerUrl" class="form-control" placeholder="https://api.originalserver.com">
+        </div>
+
+        <button type="submit" class="btn btn-success">Add Mock API</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- List of Configured APIs -->
+  <div class="card mt-4">
+    <div class="card-header bg-secondary text-white">
+      Configured Mock APIs
+    </div>
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>Endpoint</th>
+          <th>Request Type</th>
+          <th>Request Body</th>
+          <th>Response Type</th>
+          <th>Response Body</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="api : ${mockApis}">
+          <td th:text="${api.endpoint}"></td>
+          <td th:text="${api.requestType}"></td>
+          <td><pre th:text="${api.requestBody}"></pre></td>
+          <td th:text="${api.responseType}"></td>
+          <td><pre th:text="${api.responseBody}"></pre></td>
+          <td>
+            <button class="btn btn-warning btn-sm" th:data-bs-toggle="modal" th:data-bs-target="'#editModal-' + ${api.id}">Edit</button>
+            <button class="btn btn-danger btn-sm" th:onclick="'deleteApi(' + ${api.id} + ')'">Delete</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div th:each="api : ${mockApis}" th:id="'editModal-' + ${api.id}" class="modal fade" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Mock API</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/mock-config/update}" method="post">
+            <input type="hidden" name="id" th:value="${api.id}">
+            <div class="mb-3">
+              <label class="form-label">API Endpoint</label>
+              <input type="text" name="endpoint" class="form-control" th:value="${api.endpoint}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Request Body</label>
+              <textarea name="requestBody" class="form-control" rows="3" th:text="${api.requestBody}" required></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Response Body</label>
+              <textarea name="responseBody" class="form-control" rows="3" th:text="${api.responseBody}" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function deleteApi(id) {
+    if (confirm("Are you sure you want to delete this API?")) {
+      $.ajax({
+        url: "/mock-config/delete/" + id,
+        type: "DELETE",
+        success: function () {
+          alert("API deleted successfully!");
+          location.reload();
+        },
+        error: function () {
+          alert("Failed to delete API.");
+        }
+      });
+    }
+  }
+</script>
+</body>
+</html>
